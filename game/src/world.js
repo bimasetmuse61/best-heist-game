@@ -213,13 +213,24 @@ function stepLoot(world) {
 function stepEndings(world) {
   const thief = world.thief;
   for (const guard of world.guards) {
-    if (Math.hypot(guard.x - thief.x, guard.y - thief.y) < guard.radius + thief.radius - 2) {
+    if (Math.hypot(guard.x - thief.x, guard.y - thief.y) >= guard.radius + thief.radius - 2) continue;
+    if (guard.startleSeconds > 0) continue; // already spinning round; a brush is not a grab yet
+    if (guard.mode === GUARD_CHASE || guard.seesThief || world.alarmTripped) {
       world.screen = SCREEN_CAUGHT;
       world.caughtReason = world.alarmTripped
         ? 'Caught in the open with the alarm ringing.'
         : 'A guard grabbed you by the collar.';
       return;
     }
+    // Fair catch: brushing a guard who has never seen you does not end the run
+    // on the spot. He startles, spins toward you and the alarm jumps — linger
+    // in front of him and the next touch, with his eyes on you, is the grab.
+    guard.startleSeconds = 0.8;
+    sendGuardTo(guard, thief.x, thief.y, GUARD_INVESTIGATE, 2.5);
+    world.alarm = Math.min(100, world.alarm + 12);
+    world.message = 'You bumped a guard — he spins around, suspicious!';
+    world.messageSeconds = 2.2;
+    return;
   }
   const exit = world.level.exit;
   if (thief.x - thief.radius < exit.x + exit.w && thief.x > exit.x && thief.y > exit.y && thief.y < exit.y + exit.h) {

@@ -30,6 +30,7 @@ export function createGuard(path, index) {
     target: null, // {x, y} while investigating or searching
     memorySeconds: 0, // how long the current chase/search memory lasts
     seesThief: false,
+    startleSeconds: 0, // >0 while spinning round after being bumped from behind
   };
 }
 
@@ -54,6 +55,14 @@ export function sendGuardTo(guard, x, y, mode, memorySeconds) {
 }
 
 export function stepGuard(guard, dt, thief, moveCircle) {
+  if (guard.startleSeconds > 0) {
+    // Startled: stand still and spin toward the spot he was bumped from.
+    guard.startleSeconds -= dt;
+    if (guard.target) {
+      guard.angle = turnToward(guard.angle, Math.atan2(guard.target.y - guard.y, guard.target.x - guard.x), GUARD_TURN_RATE * dt);
+    }
+    return;
+  }
   if (guard.waitSeconds > 0) {
     guard.waitSeconds -= dt;
     return;

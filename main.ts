@@ -7,7 +7,7 @@
 // The grader sets the output directory; outside it, MAKEFUN_OUTPUT_DIR stands in for /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 
-import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-game.ts';
@@ -35,3 +35,7 @@ writeFileSync(
     game_path_max_bytes: 1000,
   }),
 );
+
+// One line for the person running this by hand: what was handed in.
+const shotCount = readdirSync(join(out, 'screenshots')).filter((name) => name.endsWith('.png')).length;
+console.log(`Vaultbreak hand-in written to ${out}: game/ copied, ${shotCount} screenshot(s), dossier.json written.`);
